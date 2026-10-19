@@ -21,8 +21,9 @@ export GROUP="Hardware"          # assignment group name
 "Request Details" is a custom form section, so run this on the **company instance**:
 
 ```bash
-curl -s -u "$SN_AUTH" -H "Accept: application/json" \
-  "$SN/api/now/table/sys_ui_element?sysparm_query=sys_ui_section.name=sc_task^sys_ui_section.caption=Request%20Details^ORDERBYposition&sysparm_fields=element,type"
+curl -s -u "$SN_AUTH" -H "Accept: application/json" -G "$SN/api/now/table/sys_ui_element" \
+  --data-urlencode "sysparm_query=sys_ui_section.name=sc_task^sys_ui_section.caption=Request Details^ORDERBYposition" \
+  --data-urlencode "sysparm_fields=element,type"
 ```
 
 - **Field names** (e.g. `request_item.cat_item`, `u_business_justification`) → add them to `sysparm_fields` in step 2.
@@ -31,10 +32,14 @@ curl -s -u "$SN_AUTH" -H "Accept: application/json" \
 ## 2. Get all SCTASKs for the assignment group
 
 ```bash
-curl -s -u "$SN_AUTH" -H "Accept: application/json" \
-  "$SN/api/now/table/sc_task?sysparm_query=assignment_group.name=$GROUP^active=true&sysparm_fields=sys_id,number,short_description,state,assignment_group,assigned_to,request_item,request,opened_at,due_date&sysparm_display_value=all&sysparm_limit=1000"
+curl -s -u "$SN_AUTH" -H "Accept: application/json" -G "$SN/api/now/table/sc_task" \
+  --data-urlencode "sysparm_query=assignment_group.name=$GROUP^active=true" \
+  --data-urlencode "sysparm_fields=sys_id,number,short_description,state,assignment_group,assigned_to,request_item,request,opened_at,due_date" \
+  --data-urlencode "sysparm_display_value=all" \
+  --data-urlencode "sysparm_limit=1000"
 ```
 
+- `-G --data-urlencode` is required: group names with spaces (e.g. `Service Desk`) cause `400 Bad Request` if put in the URL directly.
 - Remove `^active=true` to include closed tasks.
 - `sysparm_display_value=all` returns both raw and display values; `request_item.value` is the RITM sys_id used below.
 - More than 1000 tasks → page with `&sysparm_offset=1000`, `2000`, …
@@ -43,8 +48,9 @@ curl -s -u "$SN_AUTH" -H "Accept: application/json" \
 
 ```bash
 RITM_ID="29692305c34c131075acf61d0501312a"     # request_item.value from step 2
-curl -s -u "$SN_AUTH" -H "Accept: application/json" \
-  "$SN/api/now/attachment?sysparm_query=table_name=sc_req_item^table_sys_id=$RITM_ID&sysparm_fields=sys_id,file_name,content_type,size_bytes"
+curl -s -u "$SN_AUTH" -H "Accept: application/json" -G "$SN/api/now/attachment" \
+  --data-urlencode "sysparm_query=table_name=sc_req_item^table_sys_id=$RITM_ID" \
+  --data-urlencode "sysparm_fields=sys_id,file_name,content_type,size_bytes"
 ```
 
 ## 4. Download an attachment into the SCTASK's folder
@@ -68,8 +74,10 @@ curl -s -u "$SN_AUTH" -H "Accept: application/json" \
 Catalog variables (question → answer):
 
 ```bash
-curl -s -u "$SN_AUTH" -H "Accept: application/json" \
-  "$SN/api/now/table/sc_item_option_mtom?sysparm_query=request_item=$RITM_ID^ORDERBYsc_item_option.order&sysparm_fields=sc_item_option.item_option_new.name,sc_item_option.item_option_new.question_text,sc_item_option.value&sysparm_display_value=true"
+curl -s -u "$SN_AUTH" -H "Accept: application/json" -G "$SN/api/now/table/sc_item_option_mtom" \
+  --data-urlencode "sysparm_query=request_item=$RITM_ID^ORDERBYsc_item_option.order" \
+  --data-urlencode "sysparm_fields=sc_item_option.item_option_new.name,sc_item_option.item_option_new.question_text,sc_item_option.value" \
+  --data-urlencode "sysparm_display_value=true"
 ```
 
 ## 6. Save the result as JSON
