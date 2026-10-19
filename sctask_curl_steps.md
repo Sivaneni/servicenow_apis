@@ -101,3 +101,11 @@ sctasks/
 - On the developer instance, set `GROUP` to a group that has tasks (assign SCTASK0010002 to a group first).
 - Next step: a Python script that loops over every SCTASK and builds the folders and JSON automatically,
   using the exact fields returned by step 1.
+
+
+## link
+
+https://discord.com/channels/1492098192316043349/1561024399073615987
+
+
+
